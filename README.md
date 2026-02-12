@@ -1,4 +1,4 @@
-# Kanban Board API
+# Coderr API
 
 ## Overview
 Coderr API is a **Django REST Framework project** for a freelance developer platform that connects clients and developers, enabling project management and communication.  
@@ -22,7 +22,7 @@ It uses **Token Authentication** for secure access and supports a browsable API 
 ## Follow these steps to set up the project locally:
 
 ## 1. Clone the repository
-  git clone https://github.com/Pradi8/project.KanMind-backend.git <br>
+  git clone https://github.com/Pradi8/coderr-backend.git <br>       
   cd project.KanMind-backend
 
 ## 2. Create a virtual environment
