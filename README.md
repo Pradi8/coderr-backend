@@ -50,7 +50,7 @@ python manage.py makemigrations
 
 
 # Project Structure
-## kanban_app/
+## coderr_app/
 ├── models.py        # Boards, Tasks, Comments <br>
 ├── views.py         # API views  <br>
 ├── serializers.py   # DRF serializers  <br>
