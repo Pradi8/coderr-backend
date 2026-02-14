@@ -1,9 +1,10 @@
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterationSerializer
+from .serializers import RegisterationSerializer, UserLoginSerializer
 
 class RegisterView(APIView):
     """
@@ -27,3 +28,38 @@ class RegisterView(APIView):
             return Response(data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class UserLoginView(GenericAPIView):
+    """
+    API endpoint for user login.
+    - Allows any user (no authentication required)
+    - Accepts POST request with email and password
+    - Returns authentication token and user info on success
+    """
+    permission_classes = [AllowAny]
+    serializer_class = UserLoginSerializer
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = {}
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        data = {
+            'token' : token.key,
+            'username': user.username,
+            'email' : user.email,
+            'user_id': user.pk,
+            }
+        return Response(data, status=status.HTTP_200_OK)
+    
+class LogoutView(APIView):
+    """
+    API endpoint for logging out an authenticated user.
+    - Requires authentication
+    - Deletes the user's token
+    """
+
+    def post(self, request):
+        request.user.auth_token.delete()
+        return Response({"detail": "Logout erfolgreich. Token wurde gelöscht."}, status=status.HTTP_200_OK)
+        
