@@ -1,10 +1,13 @@
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, RetrieveAPIView, RetrieveUpdateAPIView, ListCreateAPIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterationSerializer, UserLoginSerializer
+
+from auth_app.api.permissions import IsProfileOwner
+from auth_app.models import CustomUser
+from .serializers import ProfileSerializer, RegisterationSerializer, UserLoginSerializer, BusinessProfileSerializer, CustomerProfileSerializer
 
 class RegisterView(APIView):
     """
@@ -62,4 +65,32 @@ class LogoutView(APIView):
     def post(self, request):
         request.user.auth_token.delete()
         return Response({"detail": "Logout erfolgreich. Token wurde gelöscht."}, status=status.HTTP_200_OK)
+    
+class ProfileDetailView(RetrieveUpdateAPIView):
+    """
+    API endpoint for a single profile.
+    - Supports GET and PATCH
+    """
+    permission_classes = [IsProfileOwner]
+    serializer_class = ProfileSerializer
+    queryset = CustomUser.objects.all()
+
+class BusinesView(ListCreateAPIView):
+    """
+    API endpoint for retrieving a customer profile.
+    - Supports GET method
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = BusinessProfileSerializer
+    queryset = CustomUser.objects.filter(type='business')
+
+class CustomerView(ListCreateAPIView):
+    """
+    API endpoint for retrieving a customer profile.
+    - Supports GET method
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = CustomerProfileSerializer
+    queryset = CustomUser.objects.filter(type='customer')
+
         

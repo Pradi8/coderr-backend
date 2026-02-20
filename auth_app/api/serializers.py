@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
+from auth_app.models import FileUpload
 
 User = get_user_model()
 
@@ -66,3 +67,88 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Passwort ist falsch")
         data['user'] = user
         return data
+
+class FileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for FileUpload model
+    - Used to serialize file upload data
+    """
+    class Meta:
+        model = FileUpload
+        fields = ['file', 'uploaded_at']
+    
+class ProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for CustomUser model
+    """
+    # Expose the user's ID as "user" in the API response
+    user = serializers.IntegerField(source='id', read_only=True)
+    # Exposes the URL of the user's uploaded file
+    # Read-only because this is a computed value from the related FileUpload model
+    file = serializers.ReadOnlyField(source="get_file")
+    class Meta:
+        model = User
+        fields = [
+            'user', 
+            'username', 
+            'first_name', 
+            'last_name', 
+            'file',
+            'location', 
+            'tel', 
+            'description', 
+            'working_hours', 
+            'email', 
+            'type', 
+            'created_at'
+        ]
+    
+class BusinessProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Business profile.
+    - Includes fields relevant to business profiles
+    """
+    # Expose the user's ID as "user" in the API response
+    user = serializers.IntegerField(source='id', read_only=True)
+    # Exposes the URL of the user's uploaded file
+    # Read-only because this is a computed value from the related FileUpload model
+    file = serializers.ReadOnlyField(source="get_file")
+    class Meta:
+        model = User
+        fields = [ 
+            'user',
+            'username',
+            'first_name', 
+            'last_name', 
+            'file',
+            'location', 
+            'tel', 
+            'description', 
+            'working_hours', 
+            'type'
+        ]
+
+class CustomerProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Customer profile.
+    - Includes fields relevant to customer profiles
+    """
+    # Expose the user's ID as "user" in the API response
+    user = serializers.IntegerField(source='id', read_only=True)
+    # Exposes the URL of the user's uploaded file
+    # Read-only because this is a computed value from the related FileUpload model
+    file = serializers.ReadOnlyField(source="get_file")
+    # Exposes the timestamp when the user's file was uploaded
+    # Read-only because it comes from the related FileUpload model
+    uploaded_at = serializers.ReadOnlyField(source="get_uploaded_at")
+    class Meta:
+        model = User
+        fields = [ 
+            'user',
+            'username',
+            'first_name', 
+            'last_name', 
+            'file',
+            'uploaded_at',
+            'type'
+        ]
