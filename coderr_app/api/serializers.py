@@ -35,24 +35,55 @@ class OfferSerializer(serializers.ModelSerializer):
     - Used to serialize offer data
     """
 
-    details = OfferDetailSerializer(many=True)
+    details = serializers.SerializerMethodField()
     class Meta:
         model = Offer
         fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details']
 
+    def get_details(self, obj):
+        request = self.context.get('request')
+        return [
+            {
+                'id': detail.id,
+                'url': reverse(
+                    'offerdetail-detail',
+                    kwargs={'pk': detail.pk},
+                    request=request
+                )
+            }
+            for detail in obj.details.all()
+        ]
+
+class OfferCreateSerializer(serializers.ModelSerializer):
+    
+    details = OfferDetailSerializer(many=True)
+
+    class Meta:
+        model = Offer
+        fields = ['id', 'title', 'image', 'description', 'details']
+
     def create(self, validated_data):
-        details_data = validated_data.pop('details', [])
+        details_data = validated_data.pop('details')
         offer = Offer.objects.create(**validated_data)
         for detail_data in details_data:
             OfferDetail.objects.create(offer=offer, **detail_data)
         return offer
+    
+    def update(self, instance, validated_data):
+        details_data = validated_data.pop('details', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if details_data is not None:
+            instance.details.all().delete()
+            for detail_data in details_data:
+                OfferDetail.objects.create(offer=instance, **detail_data)
+        return instance 
+    
+# class OfferDetailUpdateSerializer(serializers.ModelSerializer):
+     
+#     details = OfferDetailSerializer(many=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request = self.context.get("request")
-
-        if request:
-            if request.method == "POST":
-                self.fields.pop("user")
-                self.fields.pop("created_at")
-                self.fields.pop("updated_at")
+#     class Meta:
+#         model = Offer
+#         fields = ['id', 'title', 'image', 'description', 'details']

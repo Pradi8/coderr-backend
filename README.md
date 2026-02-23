@@ -51,12 +51,14 @@ python manage.py makemigrations
 
 # Project Structure
 ## coderr_app/
-├── models.py        # Boards, Tasks, Comments <br>
+├── models.py        # Offer, Offerdetails <br>
 ├── views.py         # API views  <br>
+├── paginations.py   # API paginations  <br>
 ├── serializers.py   # DRF serializers  <br>
 ├── urls.py
 
 ## auth_app/
+├── models.py        # Customuser, Fileupload  <br>
 ├── views.py         # Registration, login, logout  <br>
 ├── serializers.py   # DRF serializers  <br>
 ├── urls.py  <br>
