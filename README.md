@@ -8,7 +8,7 @@ It uses **Token Authentication** for secure access and supports a browsable API 
 
 ## Features
 - User registration, login, and logout
-- CRUD operations for **Boards** and **Tasks**
+- CRUD operations for **Offers** and **Orders**
 - Commenting system for tasks
 - Object-level permissions:
   - Only authors can edit their comments

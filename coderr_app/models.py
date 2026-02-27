@@ -21,3 +21,21 @@ class OfferDetail(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     features = models.JSONField(blank=True, default=list)
     offer_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default="standard")
+
+class Orders(models.Model):
+    offer_detail = models.ForeignKey(OfferDetail, on_delete=models.CASCADE)
+    customer_user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="customer_orders",
+        limit_choices_to={"type": "customer"}
+    )
+    business_user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="business_orders",
+        limit_choices_to={"type": "business"}
+    )
+    status = models.CharField(max_length=20, choices=[("in_progress", "in_progress"), ("completed", "completed"), ("cancelled", "cancelled")], default="in_progress")
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
