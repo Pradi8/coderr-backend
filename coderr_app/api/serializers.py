@@ -5,7 +5,14 @@ from auth_app.models import CustomUser
 from coderr_app.models import Offer, OfferDetail, Orders
 
 class OfferLinkDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Offer objects with a detailed link for related OfferDetail objects.
 
+    Features:
+    - Includes basic offer fields: id, user, title, image, description, timestamps
+    - Adds a 'details' field containing a list of related OfferDetail objects with their URLs
+    """
+    # SerializerMethodField allows custom method-based fields
     details = serializers.SerializerMethodField()
 
     class Meta:
@@ -13,6 +20,13 @@ class OfferLinkDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details']
 
     def get_details(self, obj):
+        """
+        Custom method to populate the 'details' field.
+
+        For each related OfferDetail:
+        - Include the ID
+        - Include the API URL for retrieving that detail
+        """
         request = self.context.get('request')
         return [
             {
@@ -23,27 +37,45 @@ class OfferLinkDetailSerializer(serializers.ModelSerializer):
         ]
 class OfferDetailSerializer(serializers.ModelSerializer):
     """
-    Serializer for Offer model
-    - Used to serialize offer data
-    """
+    Serializer for OfferDetail objects.
 
+    Purpose:
+    - Serialize OfferDetail fields for API responses
+    - Used when returning details of an offer
+    """
     class Meta:
         model = OfferDetail
         fields = ['id', 'title', 'revisions', 'delivery_time_in_days', 'price', 'features', 'offer_type']
 
 class OfferSerializer(serializers.ModelSerializer):
     """
-    Serializer for Offer model
-    - Used to serialize offer data
-    """
+    Serializer for Offer objects.
 
+    Purpose:
+    - Serialize Offer fields including related OfferDetail objects
+    - Provides a 'details' field with URLs for each related OfferDetail
+    """
+    # Custom field to include links to related OfferDetail objects
     details = serializers.SerializerMethodField()
     class Meta:
         model = Offer
         fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details']
 
     def get_details(self, obj):
+        """
+        Returns a list of related OfferDetail objects with their IDs and URLs.
+
+        Args:
+            obj (Offer): The Offer instance being serialized
+
+        Returns:
+            list: Each entry contains:
+                - 'id': primary key of the OfferDetail
+                - 'url': absolute URL for the OfferDetail API endpoint
+        """
+        # Get the request from the serializer context to build absolute URLs
         request = self.context.get('request')
+        # Build a list of dictionaries for each related OfferDetail
         return [
             {
                 'id': detail.id,
@@ -57,7 +89,14 @@ class OfferSerializer(serializers.ModelSerializer):
         ]
 
 class OfferCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating and updating Offer objects with nested OfferDetail objects.
     
+    Features:
+    - Allows creating/updating an Offer along with multiple OfferDetail entries.
+    - Nested 'details' field handles multiple OfferDetail objects.
+    """
+    # Nested serializer for related OfferDetail objects (many=True for multiple)
     details = OfferDetailSerializer(many=True)
 
     class Meta:
@@ -65,17 +104,29 @@ class OfferCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'image', 'description', 'details']
 
     def create(self, validated_data):
+        """
+        Create an Offer and its nested OfferDetail objects.
+        """
+        # Extract nested details data from the validated data
         details_data = validated_data.pop('details')
+        # Create the Offer instance
         offer = Offer.objects.create(**validated_data)
+        # Create each OfferDetail and associate with the Offer
         for detail_data in details_data:
             OfferDetail.objects.create(offer=offer, **detail_data)
         return offer
     
     def update(self, instance, validated_data):
+        """
+        Update an Offer and optionally its nested OfferDetail objects.
+        """
+        # Extract nested details if provided
         details_data = validated_data.pop('details', None)
+        # Update Offer fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+        # If details are provided, delete existing and recreate
         if details_data is not None:
             instance.details.all().delete()
             for detail_data in details_data:
@@ -83,13 +134,24 @@ class OfferCreateSerializer(serializers.ModelSerializer):
         return instance 
     
 class OrderSerializer(serializers.ModelSerializer):
-
+    """
+    Serializer for Orders.
+    
+    Features:
+    - Links an order to a specific OfferDetail using 'offer_detail_id'.
+    - Automatically assigns customer_user from the request.
+    - Pulls read-only fields from the related OfferDetail for convenience.
+    """
+    # Write-only field to select the related OfferDetail
     offer_detail_id = serializers.PrimaryKeyRelatedField(
         queryset=OfferDetail.objects.all(), write_only=True,
-        source="offer_detail"   # 👈 wichtig!
-    ) 
+        source="offer_detail"   
+    )
+    # Automatically assigned read-only fields 
     customer_user = serializers.PrimaryKeyRelatedField(read_only=True)
     business_user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    # Read-only fields from the related OfferDetail
     title = serializers.CharField(source="offer_detail.title", read_only=True)
     revisions = serializers.IntegerField(source="offer_detail.revisions", read_only=True)
     delivery_time_in_days = serializers.IntegerField(source="offer_detail.delivery_time_in_days", read_only=True)
@@ -115,11 +177,17 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        """
+        Create a new Order instance.
+        Automatically assigns:
+        - customer_user from the request
+        - business_user from the related OfferDetail's owner
+        """
         request = self.context.get("request")
         offer_detail = validated_data.pop("offer_detail")
 
         return Orders.objects.create(
             offer_detail=offer_detail,
-            customer_user=request.user,          # automatisch vom eingeloggten User
-            business_user=offer_detail.offer.user  # automatisch vom zugehörigen Offer
+            customer_user=request.user,        
+            business_user=offer_detail.offer.user 
         )
