@@ -5,13 +5,13 @@ from rest_framework import generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from auth_app.api.permissions import IsOrderParticipant, IsProfileOwner
-from coderr_app.api.serializers import OfferLinkDetailSerializer, OfferSerializer, OfferCreateSerializer, OfferDetailSerializer, OrderSerializer
-from coderr_app.models import Offer, OfferDetail, Orders
+from auth_app.api.permissions import IsOrderParticipant, IsProfileOwner, IsReviewParticipant
+from coderr_app.api.serializers import OfferLinkDetailSerializer, OfferSerializer, OfferCreateSerializer, OfferDetailSerializer, OrderSerializer, ReviewSerializer
+from coderr_app.models import Offer, OfferDetail, Orders, Review
 from coderr_app.api.paginations import StandardResultsSetPagination
 
 class OfferListViewSet(viewsets.ModelViewSet):
-    """d
+    """
     API endpoint to list all offers.
     - Requires authentication
     - Returns a list of all offers in the system
@@ -57,6 +57,8 @@ class OfferDetailViewSet(viewsets.ModelViewSet):
     """
     queryset = OfferDetail.objects.all()
     serializer_class = OfferDetailSerializer
+    # Only authenticated users can access this view
+    # and only if they pass the custom 'IsProfileOwner' check
     permission_classes = [IsAuthenticated, IsProfileOwner]
 
     def retrieve(self, request, pk=None):
@@ -78,11 +80,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         - User must be authenticated
         - User must be a participant of the order (IsOrderParticipant)
     """
+    # Only authenticated users can access this view
+    # and only if they pass the custom 'IsOrderParticipant' check
     permission_classes = [IsAuthenticated, IsOrderParticipant]
     queryset = Orders.objects.all()
     serializer_class = OrderSerializer
 
 class OrderCountView(APIView):
+    # Only authenticated users can access this view
     permission_classes = [IsAuthenticated]
 
     def get(self, request, business_user_id):
@@ -100,6 +105,7 @@ class OrderCountView(APIView):
         return Response({'order_count': queryset.count()})
     
 class CompleteOrderCountView(APIView):
+    # Only authenticated users can access this view
     permission_classes = [IsAuthenticated]
 
     def get(self, request, business_user_id):
@@ -117,3 +123,17 @@ class CompleteOrderCountView(APIView):
         return Response({
             "completed_order_count": queryset.count()
         })
+    
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing Reviews.
+    Provides standard CRUD operations.
+    Permissions:
+        - User must be authenticated
+        - User must be the owner of the profile (IsProfileOwner)
+    """
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    # Only authenticated users can access this view
+    # and only if they pass the custom 'IsReviewParticipant' check
+    permission_classes = [IsAuthenticated, IsReviewParticipant]

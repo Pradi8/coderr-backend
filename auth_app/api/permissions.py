@@ -31,3 +31,26 @@ class IsOrderParticipant(BasePermission):
             return request.user.is_staff
         # Other actions are allowed only for the business user of the order
         return obj.business_user == request.user
+    
+class IsReviewParticipant(BasePermission):
+    """
+    Custom permission to control access to Review objects.
+
+    Rules:
+    1. PATCH, DELETE requests:
+       - Only allow if the requesting user is the reviewer associated with the review.
+    2. POST requests :
+       - Only authenticated users with a customer profile are allowed to create reviews.
+    3. GET requests:
+         - Allow any authenticated user to view reviews.
+     """
+    def has_object_permission(self, request, view, obj):
+        # PATCH and DELETE requests are restricted to the reviewer of the review
+        if request.method in ["PATCH", "DELETE"]:
+            return obj.reviewer == request.user
+        # POST requests are allowed only for authenticated users with a customer profile
+        if request.method == "POST":
+            return request.user.is_authenticated and request.user.type == "customer"
+        # GET requests are allowed for any authenticated user
+        return request.user.is_authenticated
+    

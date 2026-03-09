@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from django.db import models
 from auth_app.models import CustomUser
-from coderr_app.models import Offer, OfferDetail, Orders
+from coderr_app.models import Offer, OfferDetail, Orders, Review
 
 class OfferLinkDetailSerializer(serializers.ModelSerializer):
     """
@@ -191,3 +191,48 @@ class OrderSerializer(serializers.ModelSerializer):
             customer_user=request.user,        
             business_user=offer_detail.offer.user 
         )
+    
+class ReviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Review objects.
+
+    Purpose:
+    - Serialize Review fields for API responses
+    - Used when returning reviews of a business user
+    """
+
+    reviewer = serializers.PrimaryKeyRelatedField(read_only=True)
+    class Meta:
+        model = Review
+        fields = ['id', 'business_user', 'reviewer', 'rating', 'description', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        reviewer = self.context['request'].user
+        # In PATCH requests, business_user may be missing, use the existing instance instead
+        business_user = data.get("business_user")
+        if business_user is None and self.instance is not None:
+            business_user = self.instance.business_user
+
+        # Check if the reviewer already has a review for this business
+        # In PATCH, exclude the current review instance
+        existing_reviews = Review.objects.filter(
+            reviewer=reviewer,
+            business_user=business_user
+        )
+        if self.instance:
+            existing_reviews = existing_reviews.exclude(pk=self.instance.pk)
+        if existing_reviews.exists():
+            raise serializers.ValidationError("You have already reviewed this business.")
+        return data
+        
+    def create(self, validated_data):
+        """
+        Create a new Order instance.
+        Automatically assigns:
+        - reviewer from the request 
+        """
+        request = self.context.get("request")
+
+        return Review.objects.create(
+            reviewer=request.user,
+            **validated_data)
