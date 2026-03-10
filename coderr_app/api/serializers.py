@@ -236,3 +236,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         return Review.objects.create(
             reviewer=request.user,
             **validated_data)
+
+# class BaseInfoSerializer(serializers.Serializer):
+#     """
+#     Base serializer for common fields across multiple models.
+    
+#     Purpose:
+#     - Provide a consistent structure for basic information fields.
+#     - Can be extended by other serializers to include additional fields.
+#     """
+#     review_count = serializers.IntegerField(read_only=True,)
+#     average_rating = serializers.DecimalField(max_digits=3, decimal_places=1, read_only=True)
+#     business_profile_count = serializers.IntegerField(read_only=True)
+#     offer_count = serializers.IntegerField(read_only=True)
+

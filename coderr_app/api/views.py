@@ -1,11 +1,13 @@
 from django.shortcuts import get_object_or_404
 import django_filters
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from auth_app.api.permissions import IsOrderParticipant, IsProfileOwner, IsReviewParticipant
+from auth_app.models import CustomUser
 from coderr_app.api.serializers import OfferLinkDetailSerializer, OfferSerializer, OfferCreateSerializer, OfferDetailSerializer, OrderSerializer, ReviewSerializer
 from coderr_app.models import Offer, OfferDetail, Orders, Review
 from coderr_app.api.paginations import StandardResultsSetPagination
@@ -137,3 +139,31 @@ class ReviewViewSet(viewsets.ModelViewSet):
     # Only authenticated users can access this view
     # and only if they pass the custom 'IsReviewParticipant' check
     permission_classes = [IsAuthenticated, IsReviewParticipant]
+
+class BaseInfoView(APIView):
+    """
+    API endpoint that returns basic statistics about the platform.
+    The endpoint is public and does not require authentication.
+    """
+    permission_classes = [AllowAny]
+    def get(self, request):
+        """
+        Handles GET requests and returns general platform statistics.
+        """
+        # Get all reviews that contain a rating
+        reviews = Review.objects.filter(rating__isnull=False)
+        # Count the number of reviews with a rating
+        reviewCount = reviews.count()
+        # Calculate the average rating (fallback to 0 if no ratings exist)
+        averageRating = reviews.aggregate(average=Avg('rating'))['average'] or 0
+        # Count all users with the type "business"
+        businessProfiles = CustomUser.objects.filter(type='business').count()
+        # Count all available offers
+        offers = Offer.objects.count()
+        # Return the collected statistics as a JSON response
+        return Response({
+                "review_count": reviewCount,
+                "average_rating": averageRating,
+                "business_profile_count": businessProfiles,
+                "offer_count": offers
+            })
