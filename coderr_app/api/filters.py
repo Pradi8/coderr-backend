@@ -1,4 +1,5 @@
 import django_filters
+from django.db.models import Q
 from coderr_app.models import Offer, Review
 
 class OfferFilter(django_filters.FilterSet):
