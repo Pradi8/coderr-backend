@@ -1,13 +1,13 @@
 from django.shortcuts import get_object_or_404
-import django_filters
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets
+from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from auth_app.api.permissions import IsOrderParticipant, IsProfileOwner, IsReviewParticipant
 from auth_app.models import CustomUser
+from coderr_app.api.filters import OfferFilter, ReviewFilter
 from coderr_app.api.serializers import OfferLinkDetailSerializer, OfferSerializer, OfferCreateSerializer, OfferDetailSerializer, OrderSerializer, ReviewSerializer
 from coderr_app.models import Offer, OfferDetail, Orders, Review
 from coderr_app.api.paginations import StandardResultsSetPagination
@@ -19,13 +19,15 @@ class OfferListViewSet(viewsets.ModelViewSet):
     - Returns a list of all offers in the system
     """
     # Base queryset for the ViewSet
-    queryset = Offer.objects.all()
+    queryset = Offer.objects.all().order_by('-created_at')
     # Permissions: only authenticated users can access
     permission_classes = [IsAuthenticated]
     # Use standard pagination for list results
     pagination_class = StandardResultsSetPagination
-    # filter_backends = [DjangoFilterBackend]
-    # filterset_fields = ['user__id']
+    # Enables filtering of the queryset using django-filter
+    filter_backends = [DjangoFilterBackend]
+    # Specifies the FilterSet class that defines available filters for this view
+    filterset_class = OfferFilter
 
     def perform_create(self, serializer):
         """
@@ -37,7 +39,6 @@ class OfferListViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """
         Dynamically select the serializer class based on the action:
-
         - 'retrieve': return detailed link serializer
         - 'create', 'update', 'partial_update': use creation/update serializer
         - default: use standard OfferSerializer
@@ -139,6 +140,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
     # Only authenticated users can access this view
     # and only if they pass the custom 'IsReviewParticipant' check
     permission_classes = [IsAuthenticated, IsReviewParticipant]
+    # Enables filtering of the queryset using django-filter
+    filter_backends = [DjangoFilterBackend]
+    # Specifies the FilterSet class that defines available filters for this view
+    filterset_class = ReviewFilter
 
 class BaseInfoView(APIView):
     """
