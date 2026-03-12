@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-from django.db import models
+from django.db.models import Min
 from auth_app.models import CustomUser
 from coderr_app.models import Offer, OfferDetail, Orders, Review
 
@@ -57,9 +57,20 @@ class OfferSerializer(serializers.ModelSerializer):
     """
     # Custom field to include links to related OfferDetail objects
     details = serializers.SerializerMethodField()
+
+    # Returns the lowest price among the related offer details
+    min_price = serializers.SerializerMethodField()
+
+    # Returns the lowest delivery time among the related offer details
+
+    # Returns the minimum delivery time among the related offer details
+    min_delivery_time = serializers.SerializerMethodField()
+
+    # Returns additional information about the user who created the offer
+    user_details = serializers.SerializerMethodField()
     class Meta:
         model = Offer
-        fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details']
+        fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details', 'min_price', 'min_delivery_time', 'user_details']
 
     def get_details(self, obj):
         """
@@ -87,6 +98,32 @@ class OfferSerializer(serializers.ModelSerializer):
             }
             for detail in obj.details.all()
         ]
+    
+
+    def get_user_details(self, obj):
+        """
+        Returns details about the user who created the offer.
+        """
+        request = self.context.get('request')
+        return {
+            'first_name': obj.user.first_name,
+            'last_name': obj.user.last_name,
+            'username': obj.user.username,
+        }
+    
+    def get_min_price(self, obj):
+        """
+        Returns the minimum price among all related OfferDetail objects.
+        """
+        min_price = obj.details.aggregate(Min('price'))['price__min']
+        return min_price
+
+    def get_min_delivery_time(self, obj):
+        """
+        Returns the minimum delivery time among all related OfferDetail objects.
+        """
+        min_delivery_time = obj.details.aggregate(Min('delivery_time_in_days'))['delivery_time_in_days__min']
+        return min_delivery_time
 
 class OfferCreateSerializer(serializers.ModelSerializer):
     """
