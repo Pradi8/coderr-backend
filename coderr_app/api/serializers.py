@@ -61,8 +61,6 @@ class OfferSerializer(serializers.ModelSerializer):
     # Returns the lowest price among the related offer details
     min_price = serializers.SerializerMethodField()
 
-    # Returns the lowest delivery time among the related offer details
-
     # Returns the minimum delivery time among the related offer details
     min_delivery_time = serializers.SerializerMethodField()
 
