@@ -8,11 +8,11 @@ It uses **Token Authentication** for secure access and supports a browsable API 
 
 ## Features
 - User registration, login, and logout
-- CRUD operations for **Offers** and **Orders**
-- Commenting system for tasks
+- CRUD operations for **Offers** , **Orders** and **Reviews**
+- Reviews system for oders, offers
 - Object-level permissions:
-  - Only authors can edit their comments
-  - Only admins or authors can delete comments
+  - Only authors can edit their reviews
+  - Only admins or authors can delete reviews
 - Token-based authentication
 - Browsable API for development
 
@@ -23,7 +23,7 @@ It uses **Token Authentication** for secure access and supports a browsable API 
 
 ## 1. Clone the repository
   git clone https://github.com/Pradi8/coderr-backend.git <br>       
-  cd project.KanMind-backend
+  cd project.coderr-backend
 
 ## 2. Create a virtual environment
   python -m venv env
@@ -54,6 +54,7 @@ python manage.py makemigrations
 ├── models.py        # Offer, Offerdetails <br>
 ├── views.py         # API views  <br>
 ├── paginations.py   # API paginations  <br>
+├── filters.py       # DRF filters  <br>
 ├── serializers.py   # DRF serializers  <br>
 ├── urls.py
 
