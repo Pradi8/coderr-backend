@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from auth_app.api.permissions import IsOrderParticipant, IsProfileOwner, IsReviewParticipant
 from auth_app.models import CustomUser
 from coderr_app.api.filters import OfferFilter, ReviewFilter
@@ -21,7 +21,7 @@ class OfferListViewSet(viewsets.ModelViewSet):
     # Base queryset for the ViewSet
     queryset = Offer.objects.all().order_by('-created_at')
     # Permissions: only authenticated users can access
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     # Use standard pagination for list results
     pagination_class = StandardResultsSetPagination
     # Enables filtering of the queryset using django-filter
@@ -48,7 +48,31 @@ class OfferListViewSet(viewsets.ModelViewSet):
         elif self.action in ['create', 'update', 'partial_update']:
             return OfferCreateSerializer
         return OfferSerializer
+    
+    def partial_update(self, request, *args, **kwargs):
+        """
+        PATCH: Update Offer and return the Offer itself with all OfferDetails of the user.
+        """
+        # 1️⃣ Update the Offer normally
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
+        # 2️⃣ Fetch all OfferDetail objects for the current user
+        user_details = OfferDetail.objects.filter(offer__user=request.user).select_related('offer')
+        details_serializer = OfferDetailSerializer(user_details, many=True)
+
+        # 3️⃣ Build the response: updated Offer + all details
+        response_data = {
+            "id": instance.id,
+            "title": instance.title,
+            "image": instance.image.url if instance.image else None,
+            "description": instance.description,
+            "details": details_serializer.data
+        }
+
+        return Response(response_data)
     
 class OfferDetailViewSet(viewsets.ModelViewSet):
     """
@@ -64,16 +88,16 @@ class OfferDetailViewSet(viewsets.ModelViewSet):
     # and only if they pass the custom 'IsProfileOwner' check
     permission_classes = [IsAuthenticated, IsProfileOwner]
 
-    def retrieve(self, request, pk=None):
-        """
-        Retrieve a specific OfferDetail by primary key.
-        Overrides the default retrieve to explicitly use get_object_or_404.
-        """
-        # Get the OfferDetail object by primary key or return 404
-        offer_detail = get_object_or_404(self.queryset, pk=pk)
-        serializer = OfferDetailSerializer(offer_detail)
-        # Return serialized data in the response
-        return Response(serializer.data)
+    # def retrieve(self, request, pk=None):
+    #     """
+    #     Retrieve a specific OfferDetail by primary key.
+    #     Overrides the default retrieve to explicitly use get_object_or_404.
+    #     """
+    #     # Get the OfferDetail object by primary key or return 404
+    #     offer_detail = get_object_or_404(self.queryset, pk=pk)
+    #     serializer = OfferDetailSerializer(offer_detail)
+    #     # Return serialized data in the response
+    #     return Response(serializer.data)
     
 class OrderViewSet(viewsets.ModelViewSet):
     """

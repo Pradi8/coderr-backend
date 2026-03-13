@@ -7,8 +7,8 @@ class Offer(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='offer_images/', blank=True, null=True)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class OfferDetail(models.Model):
@@ -50,8 +50,8 @@ class Orders(models.Model):
         ],
         default="in_progress"
     )
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Review(models.Model):
@@ -61,5 +61,5 @@ class Review(models.Model):
                                  related_name="reviews", limit_choices_to={"type": "customer"})
     rating = models.IntegerField()
     description = models.TextField(blank=True)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

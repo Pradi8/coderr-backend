@@ -221,10 +221,24 @@ class OrderSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         offer_detail = validated_data.pop("offer_detail")
 
+        # return Orders.objects.create(
+        #     offer_detail=offer_detail,
+        #     customer_user=request.user,        
+        #     business_user=offer_detail.offer.user 
+        # )
+            # business_user = aktuell eingeloggter Business-User
+        if request.user.type != "business":
+            raise serializers.ValidationError("Nur Business-User können Orders erstellen.")
+        business_user = request.user
+
+        # customer_user = Kunde der Bestellung (hier der eingeloggte User)
+        customer_user = request.user  # Business kann für sich selbst bestellen
+        # Optional: falls Kunde explizit anders, kann man ID aus Request nutzen
+
         return Orders.objects.create(
             offer_detail=offer_detail,
-            customer_user=request.user,        
-            business_user=offer_detail.offer.user 
+            business_user=business_user,
+            customer_user=customer_user
         )
     
 class ReviewSerializer(serializers.ModelSerializer):

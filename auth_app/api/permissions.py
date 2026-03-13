@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
+
 class IsProfileOwner(BasePermission):
     """
     Custom permission to allow users to access only their own profile.
@@ -26,11 +27,13 @@ class IsOrderParticipant(BasePermission):
        - Allow only if the requesting user is the business user associated with the order.
     """
     def has_object_permission(self, request, view, obj):
+        print("Current user ID:", request.user.id)
+        print("Order business_user ID:", obj.business_user_id)
         # DELETE requests are restricted to staff users
         if request.method == "DELETE":
             return request.user.is_staff
         # Other actions are allowed only for the business user of the order
-        return obj.business_user == request.user
+        return obj.business_user_id == request.user.id
     
 class IsReviewParticipant(BasePermission):
     """
@@ -44,13 +47,18 @@ class IsReviewParticipant(BasePermission):
     3. GET requests:
          - Allow any authenticated user to view reviews.
      """
-    def has_object_permission(self, request, view, obj):
-        # PATCH and DELETE requests are restricted to the reviewer of the review
-        if request.method in ["PATCH", "DELETE"]:
-            return obj.reviewer == request.user
+    def has_permission(self, request, view):
         # POST requests are allowed only for authenticated users with a customer profile
         if request.method == "POST":
             return request.user.is_authenticated and request.user.type == "customer"
         # GET requests are allowed for any authenticated user
-        return request.user.is_authenticated
+        if request.method == "GET":
+            return request.user.is_authenticated
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        # PATCH and DELETE requests are restricted to the reviewer of the review
+        if request.method in ["PATCH", "DELETE"]:
+            return obj.reviewer == request.user
+        return True
     
