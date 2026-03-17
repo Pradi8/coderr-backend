@@ -15,7 +15,21 @@ class IsProfileOwner(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         return obj == user
-    
+
+class IsBusinessUser(BasePermission):
+    """
+    Custom permission to allow only business users to access certain views.
+    """
+    def has_permission(self, request, view):
+        # POST requests are allowed only for authenticated users with a customer profile
+        if request.method == "POST":
+            return request.user.is_authenticated and request.user.type == "business"
+        # GET requests are allowed for any authenticated user
+        if request.method == "GET":
+            return request.user.is_authenticated
+        # PATCH, DELETE requests are allowed only for authenticated users who created the offer
+        if request.method in ["PATCH", "DELETE"]:
+            return request.user.is_authenticated and request.user == view.get_object().user
 class IsOrderParticipant(BasePermission):
     """
     Custom permission to control access to Order objects.

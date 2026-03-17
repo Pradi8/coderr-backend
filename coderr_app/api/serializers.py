@@ -15,9 +15,15 @@ class OfferLinkDetailSerializer(serializers.ModelSerializer):
     # SerializerMethodField allows custom method-based fields
     details = serializers.SerializerMethodField()
 
+    # Returns the lowest price among the related offer details
+    min_price = serializers.SerializerMethodField()
+
+    # Returns the minimum delivery time among the related offer details
+    min_delivery_time = serializers.SerializerMethodField()
+
     class Meta:
         model = Offer
-        fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details']
+        fields = ['id', 'user', 'title', 'image', 'description', 'created_at', 'updated_at', 'details', 'min_price', 'min_delivery_time']
 
     def get_details(self, obj):
         """
@@ -35,6 +41,24 @@ class OfferLinkDetailSerializer(serializers.ModelSerializer):
             }
             for detail in obj.details.all()
         ]
+    
+    def get_min_price(self, obj):
+        """
+        Returns the minimum price among all related OfferDetail objects.
+        """
+        min_price_param = self.context['request'].query_params.get('min_price')
+        details_qs = obj.details.all()
+        if min_price_param:
+            details_qs = details_qs.filter(price__gte=min_price_param)
+        return details_qs.aggregate(Min('price'))['price__min']
+
+    def get_min_delivery_time(self, obj):
+        """
+        Returns the minimum delivery time among all related OfferDetail objects.
+        """
+        min_delivery_time = obj.details.aggregate(Min('delivery_time_in_days'))['delivery_time_in_days__min']
+        return min_delivery_time
+    
 class OfferDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for OfferDetail objects.
@@ -46,6 +70,14 @@ class OfferDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = OfferDetail
         fields = ['id', 'title', 'revisions', 'delivery_time_in_days', 'price', 'features', 'offer_type']
+
+    def validate_offer_type(self, value):
+        """
+        Stellt sicher, dass offer_type nicht leer ist.
+        """
+        if not value:
+            raise serializers.ValidationError("Offer type darf nicht leer sein.")
+        return value
 
 class OfferSerializer(serializers.ModelSerializer):
     """
@@ -113,8 +145,13 @@ class OfferSerializer(serializers.ModelSerializer):
         """
         Returns the minimum price among all related OfferDetail objects.
         """
-        min_price = obj.details.aggregate(Min('price'))['price__min']
-        return min_price
+        # min_price = obj.details.aggregate(Min('price'))['price__min']
+        # return min_price
+        min_price_param = self.context['request'].query_params.get('min_price')
+        details_qs = obj.details.all()
+        if min_price_param:
+            details_qs = details_qs.filter(price__gte=min_price_param)
+        return details_qs.aggregate(Min('price'))['price__min']
 
     def get_min_delivery_time(self, obj):
         """

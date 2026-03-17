@@ -9,7 +9,7 @@ class OfferFilter(django_filters.FilterSet):
     creater_id = django_filters.NumberFilter(field_name='user__id')
 
     # Filter for minimum price
-    min_price = django_filters.NumberFilter(field_name='details__price', lookup_expr='lte')
+    min_price = django_filters.NumberFilter(field_name='details__price', lookup_expr='gte')
 
     # Filter for maximum delivery time in days
     max_delivery_time = django_filters.NumberFilter(field_name='details__delivery_time_in_days', lookup_expr='lte')
@@ -35,6 +35,11 @@ class OfferFilter(django_filters.FilterSet):
         Filter offers whose title OR description contains the search term (case-insensitive)
         """
         return queryset.filter(Q(title__icontains=value) | Q(description__icontains=value))
+    
+    # Custom method for min_price filter
+    def filter_min_price(self, queryset, name, value):
+        # Filter Offers where at least one OfferDetail has price >= min_price
+        return queryset.filter(details__price__gte=value).distinct()
     
 class ReviewFilter(django_filters.FilterSet):
     
