@@ -27,8 +27,6 @@ class IsOrderParticipant(BasePermission):
        - Allow only if the requesting user is the business user associated with the order.
     """
     def has_object_permission(self, request, view, obj):
-        print("Current user ID:", request.user.id)
-        print("Order business_user ID:", obj.business_user_id)
         # DELETE requests are restricted to staff users
         if request.method == "DELETE":
             return request.user.is_staff

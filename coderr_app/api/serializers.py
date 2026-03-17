@@ -183,8 +183,8 @@ class OrderSerializer(serializers.ModelSerializer):
         source="offer_detail"   
     )
     # Automatically assigned read-only fields 
-    customer_user = serializers.PrimaryKeyRelatedField(read_only=True)
-    business_user = serializers.PrimaryKeyRelatedField(read_only=True)
+    customer_user = serializers.SerializerMethodField()
+    business_user = serializers.SerializerMethodField()
 
     # Read-only fields from the related OfferDetail
     title = serializers.CharField(source="offer_detail.title", read_only=True)
@@ -197,7 +197,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Orders
         fields = [
             'id',
-            'offer_detail_id',  # für Request
+            'offer_detail_id',  
             'customer_user',
             'business_user',
             'title',
@@ -211,29 +211,29 @@ class OrderSerializer(serializers.ModelSerializer):
             'updated_at'
         ]
 
+    def get_customer_user(self, obj):
+        # Returns the ID of the customer user associated with this order
+        return obj.customer_user.id
+
+    def get_business_user(self, obj):
+        # Returns the ID of the business user who owns the related Offer
+        return obj.business_user.id
+    
     def create(self, validated_data):
         """
         Create a new Order instance.
         Automatically assigns:
-        - customer_user from the request
-        - business_user from the related OfferDetail's owner
+        - customer_user from the request (the logged-in user)
+        - business_user from the owner of the related OfferDetail
         """
         request = self.context.get("request")
         offer_detail = validated_data.pop("offer_detail")
 
-        # return Orders.objects.create(
-        #     offer_detail=offer_detail,
-        #     customer_user=request.user,        
-        #     business_user=offer_detail.offer.user 
-        # )
-            # business_user = aktuell eingeloggter Business-User
-        if request.user.type != "business":
-            raise serializers.ValidationError("Nur Business-User können Orders erstellen.")
-        business_user = request.user
+        # Get the business user from the offer linked to this offer_detail
+        business_user = offer_detail.offer.user
 
-        # customer_user = Kunde der Bestellung (hier der eingeloggte User)
-        customer_user = request.user  # Business kann für sich selbst bestellen
-        # Optional: falls Kunde explizit anders, kann man ID aus Request nutzen
+        # The customer is the currently logged-in user
+        customer_user = request.user 
 
         return Orders.objects.create(
             offer_detail=offer_detail,
