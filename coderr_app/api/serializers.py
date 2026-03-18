@@ -76,7 +76,7 @@ class OfferDetailSerializer(serializers.ModelSerializer):
         Stellt sicher, dass offer_type nicht leer ist.
         """
         if not value:
-            raise serializers.ValidationError("Offer type darf nicht leer sein.")
+            raise serializers.ValidationError("Offer type is required.")
         return value
 
 class OfferSerializer(serializers.ModelSerializer):
@@ -188,22 +188,37 @@ class OfferCreateSerializer(serializers.ModelSerializer):
             OfferDetail.objects.create(offer=offer, **detail_data)
         return offer
     
+
     def update(self, instance, validated_data):
-        """
-        Update an Offer and optionally its nested OfferDetail objects.
-        """
-        # Extract nested details if provided
+        # Extract nested details
         details_data = validated_data.pop('details', None)
-        # Update Offer fields
+
+        # Update Offer-fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        # If details are provided, delete existing and recreate
-        if details_data is not None:
-            instance.details.all().delete()
+
+        # Update details based on offer_type
+        if details_data:
+            # Map existing details by offer_type
+            existing_details = {d.offer_type: d for d in instance.details.all()}
+
             for detail_data in details_data:
-                OfferDetail.objects.create(offer=instance, **detail_data)
-        return instance 
+                offer_type = detail_data.get('offer_type')
+                if not offer_type:
+                    raise serializers.ValidationError("offer_type is required for updates.")
+
+                if offer_type in existing_details:
+                    # Update existing detail
+                    detail = existing_details[offer_type]
+                    for attr, value in detail_data.items():
+                        setattr(detail, attr, value)
+                    detail.save()
+                else:
+                    # Create new Detail 
+                    OfferDetail.objects.create(offer=instance, **detail_data)
+
+        return instance
     
 class OrderSerializer(serializers.ModelSerializer):
     """

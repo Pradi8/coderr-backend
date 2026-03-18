@@ -48,39 +48,20 @@ class OfferListViewSet(viewsets.ModelViewSet):
         elif self.action in ['create', 'update', 'partial_update']:
             return OfferCreateSerializer
         return OfferSerializer
-    
-    def partial_update(self, request, *args, **kwargs):
-        """
-        PATCH: Update Offer and return the Offer itself with all OfferDetails of the user.
-        """
-        # Update the Offer normally
+
+    def update(self, request, *args, **kwargs):
+        # Run DRF's standard update (validates data, updates Offer and nested details)
+        super().update(request, *args, **kwargs) 
+        # Get the updated Offer object 
         instance = self.get_object()
-        # serializer = self.get_serializer(instance, data=request.data, partial=True)
-        # detail = instance.details.first()
-        # serializer = self.get_serializer(detail, data=[ {...} ], partial=True)
-        # serializer.is_valid(raise_exception=True)
-        # self.perform_update(serializer)
+        # Serialize the full updated Offer, including all nested details
+        serializer = OfferCreateSerializer(instance, context={'request': request})
+        # Return complete updated data
+        return Response(serializer.data)
 
-        detail = instance.details.first()
-        detail_data = request.data.get('details', {})  # Dictionary, kein Array
-        serializer = OfferDetailSerializer(detail, data=detail_data, partial=True)
-        serializer.is_valid(raise_exception=True)  # <- hier greift validate_offer_type
-        serializer.save()
-
-        # Fetch all OfferDetail objects for the current user
-        user_details = OfferDetail.objects.filter(offer__user=request.user).select_related('offer')
-        details_serializer = OfferDetailSerializer(user_details, many=True)
-
-        # Build the response: updated Offer + all details
-        response_data = {
-            "id": instance.id,
-            "title": instance.title,
-            "image": instance.image.url if instance.image else None,
-            "description": instance.description,
-            "details": details_serializer.data
-        }
-
-        return Response(response_data)
+    def partial_update(self, request, *args, **kwargs):
+        # Use the same logic for PATCH requests
+        return self.update(request, *args, **kwargs)
     
 class OfferDetailViewSet(viewsets.ModelViewSet):
     """
