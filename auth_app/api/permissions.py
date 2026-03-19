@@ -18,19 +18,71 @@ class IsProfileOwner(BasePermission):
 
 class IsBusinessUser(BasePermission):
     """
-    Custom permission to allow only business users to access certain views.
+    Custom permission to control access to Offer endpoints.
+
+    Rules:
+    - Anyone can view the list of offers (public access)
+    - Only authenticated users can view offer details
+    - Only authenticated business users can create offers
+    - Only the owner of an offer can update or delete it
+    """
+
+    def has_permission(self, request, view):
+        """
+        General permission check (no object yet).
+        This runs BEFORE accessing a specific object.
+        """
+
+        # Public access to list endpoint
+        if view.action == "list":
+            return True
+
+        # Only authenticated users can access detail view
+        if view.action == "retrieve":
+            return request.user.is_authenticated
+
+        # Only authenticated business users can create offers
+        if view.action == "create":
+            return (
+                request.user.is_authenticated
+                and request.user.type == "business"
+            )
+
+        # Update/Delete requires authentication (ownership checked later)
+        if view.action in ["update", "partial_update", "destroy"]:
+            return request.user.is_authenticated
+
+        #  Everything else by default
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Object-level permission check.
+        This runs AFTER the object has been retrieved.
+        """
+
+        # Only the owner of the offer can update or delete it
+        if view.action in ["update", "partial_update", "destroy"]:
+            return obj.user == request.user
+
+        # Allow access in all other cases
+        return True
+class IsOrderParticipant(BasePermission):
+    """
+    General permission check (object-level permissions are not checked yet).
+
+    This method runs **before accessing a specific object**.
+    
+    Rules implemented here:
+    - Only authenticated users with type 'customer' are allowed to make POST requests.
+    - All other request methods (GET, PUT, DELETE, etc.) are allowed for any user.
     """
     def has_permission(self, request, view):
-        # POST requests are allowed only for authenticated users with a customer profile
+        # POST requests: Only allow if user is authenticated AND type is 'customer'
         if request.method == "POST":
-            return request.user.is_authenticated and request.user.type == "business"
-        # GET requests are allowed for any authenticated user
-        if request.method == "GET":
-            return request.user.is_authenticated
-        # PATCH, DELETE requests are allowed only for authenticated users who created the offer
-        if request.method in ["PATCH", "DELETE"]:
-            return request.user.is_authenticated and request.user == view.get_object().user
-class IsOrderParticipant(BasePermission):
+            return request.user.is_authenticated and request.user.type == "customer"
+        return True
+
     """
     Custom permission to control access to Order objects.
 

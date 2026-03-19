@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from auth_app.api.permissions import IsBusinessUser, IsOrderParticipant, IsProfileOwner, IsReviewParticipant
 from auth_app.models import CustomUser
 from coderr_app.api.filters import OfferFilter, ReviewFilter
@@ -100,14 +100,15 @@ class OrderCountView(APIView):
         Returns the number of orders with status 'in_progress'
         for a specific business user.
         """
-        # Filter orders belonging to the given business user
-        # and with status 'in_progress'
-        queryset = Orders.objects.filter(
-            business_user_id=business_user_id,
-            status="in_progress"
-        )
+        # Check if the business user exists (otherwise 404)
+        business_user = get_object_or_404(CustomUser, id=business_user_id, type="business")
 
-        return Response({'order_count': queryset.count()})
+        order_count = Orders.objects.filter(
+            business_user=business_user,
+            status="in_progress"
+        ).count()
+
+        return Response({'order_count': order_count})
     
 class CompleteOrderCountView(APIView):
     # Only authenticated users can access this view
@@ -118,15 +119,17 @@ class CompleteOrderCountView(APIView):
         Returns the number of orders with status 'completed'
         for a specific business user.
         """
+        # Check if the business user exists (otherwise 404)
+        business_user = get_object_or_404(CustomUser, id=business_user_id, type="business")
         # Filter orders belonging to the given business user
         # and with status 'completed'
-        queryset = Orders.objects.filter(
+        completed_order_count = Orders.objects.filter(
             business_user_id=business_user_id,
             status="completed"
-        )
+        ).count()
     
         return Response({
-            "completed_order_count": queryset.count()
+            "completed_order_count": completed_order_count
         })
     
 class ReviewViewSet(viewsets.ModelViewSet):
