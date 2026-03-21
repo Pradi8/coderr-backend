@@ -18,15 +18,11 @@ class OfferListViewSet(viewsets.ModelViewSet):
     - Requires authentication
     - Returns a list of all offers in the system
     """
-    # Base queryset for the ViewSet
+    
     queryset = Offer.objects.all().order_by('-created_at')
-    # Permissions: only authenticated users can access
     permission_classes = [IsBusinessUser]
-    # Use standard pagination for list results
     pagination_class = StandardResultsSetPagination
-    # Enables filtering of the queryset using django-filter
     filter_backends = [DjangoFilterBackend]
-    # Specifies the FilterSet class that defines available filters for this view
     filterset_class = OfferFilter
 
     def perform_create(self, serializer):
@@ -50,17 +46,12 @@ class OfferListViewSet(viewsets.ModelViewSet):
         return OfferSerializer
 
     def update(self, request, *args, **kwargs):
-        # Run DRF's standard update (validates data, updates Offer and nested details)
-        super().update(request, *args, **kwargs) 
-        # Get the updated Offer object 
+        super().update(request, *args, **kwargs)  
         instance = self.get_object()
-        # Serialize the full updated Offer, including all nested details
         serializer = OfferCreateSerializer(instance, context={'request': request})
-        # Return complete updated data
         return Response(serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
-        # Use the same logic for PATCH requests
         return self.update(request, *args, **kwargs)
     
 class OfferDetailViewSet(viewsets.ModelViewSet):
@@ -73,8 +64,6 @@ class OfferDetailViewSet(viewsets.ModelViewSet):
     """
     queryset = OfferDetail.objects.all()
     serializer_class = OfferDetailSerializer
-    # Only authenticated users can access this view
-    # and only if they pass the custom 'IsProfileOwner' check
     permission_classes = [IsAuthenticated, IsProfileOwner]
     
 class OrderViewSet(viewsets.ModelViewSet):
@@ -85,14 +74,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         - User must be authenticated
         - User must be a participant of the order (IsOrderParticipant)
     """
-    # Only authenticated users can access this view
-    # and only if they pass the custom 'IsOrderParticipant' check
+
     permission_classes = [IsAuthenticated, IsOrderParticipant]
     queryset = Orders.objects.all()
     serializer_class = OrderSerializer
 
 class OrderCountView(APIView):
-    # Only authenticated users can access this view
     permission_classes = [IsAuthenticated]
 
     def get(self, request, business_user_id):
@@ -100,7 +87,7 @@ class OrderCountView(APIView):
         Returns the number of orders with status 'in_progress'
         for a specific business user.
         """
-        # Check if the business user exists (otherwise 404)
+        
         business_user = get_object_or_404(CustomUser, id=business_user_id, type="business")
 
         order_count = Orders.objects.filter(
@@ -111,7 +98,7 @@ class OrderCountView(APIView):
         return Response({'order_count': order_count})
     
 class CompleteOrderCountView(APIView):
-    # Only authenticated users can access this view
+    
     permission_classes = [IsAuthenticated]
 
     def get(self, request, business_user_id):
@@ -119,10 +106,9 @@ class CompleteOrderCountView(APIView):
         Returns the number of orders with status 'completed'
         for a specific business user.
         """
-        # Check if the business user exists (otherwise 404)
+        
         business_user = get_object_or_404(CustomUser, id=business_user_id, type="business")
-        # Filter orders belonging to the given business user
-        # and with status 'completed'
+
         completed_order_count = Orders.objects.filter(
             business_user_id=business_user_id,
             status="completed"
@@ -142,12 +128,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    # Only authenticated users can access this view
-    # and only if they pass the custom 'IsReviewParticipant' check
     permission_classes = [IsAuthenticated, IsReviewParticipant]
-    # Enables filtering of the queryset using django-filter
     filter_backends = [DjangoFilterBackend]
-    # Specifies the FilterSet class that defines available filters for this view
     filterset_class = ReviewFilter
 
 class BaseInfoView(APIView):
@@ -160,17 +142,13 @@ class BaseInfoView(APIView):
         """
         Handles GET requests and returns general platform statistics.
         """
-        # Get all reviews that contain a rating
+        
         reviews = Review.objects.filter(rating__isnull=False)
-        # Count the number of reviews with a rating
         reviewCount = reviews.count()
-        # Calculate the average rating (fallback to 0 if no ratings exist)
         averageRating = reviews.aggregate(average=Avg('rating'))['average'] or 0
-        # Count all users with the type "business"
         businessProfiles = CustomUser.objects.filter(type='business').count()
-        # Count all available offers
         offers = Offer.objects.count()
-        # Return the collected statistics as a JSON response
+        
         return Response({
                 "review_count": reviewCount,
                 "average_rating": averageRating,

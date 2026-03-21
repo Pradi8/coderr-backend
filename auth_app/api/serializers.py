@@ -81,10 +81,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for CustomUser model
     """
-    # Expose the user's ID as "user" in the API response
+
     user = serializers.IntegerField(source='id', read_only=True)
-    # Exposes the URL of the user's uploaded file
-    # Read-only because this is a computed value from the related FileUpload model
+ 
     file = serializers.ReadOnlyField(source="get_file")
     class Meta:
         model = User
@@ -108,10 +107,9 @@ class BusinessProfileSerializer(serializers.ModelSerializer):
     Serializer for Business profile.
     - Includes fields relevant to business profiles
     """
-    # Expose the user's ID as "user" in the API response
+    
     user = serializers.IntegerField(source='id', read_only=True)
-    # Exposes the URL of the user's uploaded file
-    # Read-only because this is a computed value from the related FileUpload model
+ 
     file = serializers.ReadOnlyField(source="get_file")
     class Meta:
         model = User
@@ -133,13 +131,11 @@ class CustomerProfileSerializer(serializers.ModelSerializer):
     Serializer for Customer profile.
     - Includes fields relevant to customer profiles
     """
-    # Expose the user's ID as "user" in the API response
+    
     user = serializers.IntegerField(source='id', read_only=True)
-    # Exposes the URL of the user's uploaded file
-    # Read-only because this is a computed value from the related FileUpload model
+    
     file = serializers.ReadOnlyField(source="get_file")
-    # Exposes the timestamp when the user's file was uploaded
-    # Read-only because it comes from the related FileUpload model
+
     uploaded_at = serializers.ReadOnlyField(source="get_uploaded_at")
     class Meta:
         model = User

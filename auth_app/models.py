@@ -8,14 +8,12 @@ class CustomUser(AbstractUser):
     - Keep all default user fields (username, email, password, etc.)
     - Add additional custom fields
     """
-    # Defines the possible user types.
-    # (value_stored_in_database, human_readable_display_name)
+   
     TYPE_CHOICES = [
         ("customer", "customer"),
         ("business", "business"),
     ]
-    # New field that specifies the type of user.
-    # Choices restricts the allowed values to TYPE_CHOICES.
+
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default="customer")
     tel = models.CharField(max_length=255, blank=True)
     location = models.CharField(max_length=255, blank=True)

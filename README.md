@@ -21,12 +21,16 @@ It uses **Token Authentication** for secure access and supports a browsable API 
 # Installation
 ## Follow these steps to set up the project locally:
 
+## Requirements: Python 3.14.
+
 ## 1. Clone the repository
   git clone https://github.com/Pradi8/coderr-backend.git <br>       
   cd coderr-backend
 
 ## 2. Create a virtual environment
-  python -m venv env
+  '''bash 
+    python -m venv env
+  '''
 
 ## 3. Activate the virtual environment
   source env/bin/activate  # <b>Linux/Mac</b>  <br>
