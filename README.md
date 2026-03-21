@@ -33,11 +33,13 @@ It uses **Token Authentication** for secure access and supports a browsable API 
   ```
 
 ## 3. Activate the virtual environment
+# <b>Linux/Mac</b>
 ```bash
-  env/bin/activate  # <b>Linux/Mac</b>  <br>
+  env/bin/activate  
 ```
+# <b>Windows</b>
 ```bash
-  env\Scripts\activate     # <b>Windows</b> 
+  env\Scripts\activate      
 ```
 
 ## 4. Install Python dependencies
@@ -62,7 +64,7 @@ It uses **Token Authentication** for secure access and supports a browsable API 
 
 ## 8. Start the development server
 ```bash
-  python manage.py runserver  <br>
+  python manage.py runserver  
 ```
   The project will be running at http://127.0.0.1:8000/
 
