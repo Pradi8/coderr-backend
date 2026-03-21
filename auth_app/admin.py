@@ -1,10 +1,6 @@
 from django.contrib import admin
-from .models import CustomUser
+from .models import CustomUser, FileUpload
 
 
-admin.site.register(CustomUser)
-
-
-# Superuser
-# Username: admin
-# Password: admin1234
+admin.site.register(CustomUser)  
+admin.site.register(FileUpload)
