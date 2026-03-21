@@ -28,9 +28,9 @@ It uses **Token Authentication** for secure access and supports a browsable API 
   cd coderr-backend
 
 ## 2. Create a virtual environment
-  '''bash 
+  ```bash 
     python -m venv env
-  '''
+  ```
 
 ## 3. Activate the virtual environment
   source env/bin/activate  # <b>Linux/Mac</b>  <br>
