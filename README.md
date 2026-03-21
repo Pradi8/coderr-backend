@@ -33,11 +33,11 @@ It uses **Token Authentication** for secure access and supports a browsable API 
   ```
 
 ## 3. Activate the virtual environment
-# <b>Linux/Mac</b>
+### <b>Linux/Mac</b>
 ```bash
   env/bin/activate  
 ```
-# <b>Windows</b>
+### <b>Windows</b>
 ```bash
   env\Scripts\activate      
 ```
