@@ -33,23 +33,37 @@ It uses **Token Authentication** for secure access and supports a browsable API 
   ```
 
 ## 3. Activate the virtual environment
+```bash
   source env/bin/activate  # <b>Linux/Mac</b>  <br>
+```
+```bash
   env\Scripts\activate     # <b>Windows</b> 
+```
 
 ## 4. Install Python dependencies
+```bash
   pip install -r requirements.txt
+```
 
 ## 5. Create database migrations
-python manage.py makemigrations
+```bash
+  python manage.py makemigrations
+```
 
 ## 6. Apply database migrations
+```bash
   python manage.py migrate
+```
 
 ## 7. Create a superuser (admin account)
+```bash
   python manage.py createsuperuser
+```
 
 ## 8. Start the development server
+```bash
   python manage.py runserver  <br>
+```
   The project will be running at http://127.0.0.1:8000/
 
 
