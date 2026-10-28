@@ -66,12 +66,10 @@ db.sqlite3-journal
 __pycache__/
 
 # Ignore all migration files except __init__.py
-*/migrations/*.py
-!*/migrations/__init__.py
 
 # Optionally ignore __pycache__
 __pycache__/
-*.pyc
+*.pycfe
 
 # Flask stuff:
 instance/
@@ -226,3 +224,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Staticfiles
+/staticfiles/
