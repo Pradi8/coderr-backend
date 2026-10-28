@@ -21,6 +21,9 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "")
 
+if not SECRET_KEY:
+    raise ValueError("Die Umgebungsvariable SECRET_KEY fehlt.")
+
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
@@ -35,9 +38,6 @@ ALLOWED_HOSTS.extend(
     for host in extra_hosts.split(",")
     if host.strip()
 )
-
-if not SECRET_KEY:
-    raise ValueError("Die Umgebungsvariable SECRET_KEY fehlt.")
 
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
